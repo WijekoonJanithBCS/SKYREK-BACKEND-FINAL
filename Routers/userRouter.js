@@ -1,5 +1,5 @@
 import express from "express";
-import { blockOrUnblockUser, changeRole, ChangeUserPassowrd, createUser, getAllUsers, getUser, googleLogin, loginuser, sendOTP, updateUserProfile, verifyOTP } from "../controllers/usercontroller.js";
+import { blockOrUnblockUser, changeRole, ChangeUserPassowrd, createUser, getAllUsers, getcurrentUser, getUser, googleLogin, loginuser, sendOTP, updateUserProfile, verifyOTP } from "../controllers/usercontroller.js";
 //import { verify } from "jsonwebtoken";
 
 
@@ -26,5 +26,7 @@ userRouter.get("/profile", getUser )
 userRouter.get("/all/:pageSize/:pageNumber" , getAllUsers)
 
 userRouter.put("/updateUserProfile", updateUserProfile)
+
+userRouter.get("/current", getcurrentUser)
 
 export default userRouter;
