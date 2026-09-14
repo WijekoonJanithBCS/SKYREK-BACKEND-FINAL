@@ -1,6 +1,6 @@
 import express from "express";
-import { CreateOrder, GetOrders, updateOrderStatusAndNotes } from "../controllers/OrderController.js";
-import { get } from "mongoose";
+import { CreateOrder, GetOrders, updateOrderStatusAndNotes } from "../controllers/orderController.js";
+
 
 const orderRouter = express.Router();
 
