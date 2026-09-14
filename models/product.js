@@ -7,6 +7,7 @@ const productSchema = new mongoose.Schema({
         unique: true
     },
     name: {
+        //this is product name
         type: String,
         required: true
     },
