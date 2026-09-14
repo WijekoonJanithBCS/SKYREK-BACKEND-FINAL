@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv'
 import OTP from '../models/otp.js';
 import nodemailer from 'nodemailer';
+import axios from 'axios';
 dotenv.config()
 
 const transporter= nodemailer.createTransport({
@@ -51,6 +52,12 @@ export function loginuser(req, res) {
                 });
             }
             else{
+                if(user.isBlocked){
+                    return res.status(403).json({
+                        message: "User is blocked"
+                    });
+                }
+
                 const isPasswordValid = bcrypt.compareSync(req.body.password, user.password);
                 if(isPasswordValid){
 
@@ -242,17 +249,17 @@ export async function googleLogin(req, res){
                 Authorization : "Bearer" + req.body.token
             }
         })
-        console.log(googleResponse)
-        const user = await User.findOne({email : googleResponse.data.email})
+        console.log(googleresponse)
+        const user = await User.findOne({email : googleresponse.data.email})
         console.log(user)
         
         if(user ==null){
             const newUser = new User({
-                email: googleResponse.data.email,
-                firstName: googleResponse.data.given_name,
-                lastName: googleResponse.data.family_name,
+                email: googleresponse.data.email,
+                firstName: googleresponse.data.given_name,
+                lastName: googleresponse.data.family_name,
                 password: "google-login",
-                image: googleResponse.data.picture,
+                image: googleresponse.data.picture,
                 isEmailVerified: true
             })
             await newUser.save()
@@ -276,6 +283,13 @@ export async function googleLogin(req, res){
 
         }
         else{
+            if(user.isBlocked){
+                res.status(403).json({
+                    message: "User is blocked"
+                })
+                return
+            }
+
             const token = jwt.sign ({
                 email: user.email,
                 firstName: user.firstName,
@@ -295,7 +309,117 @@ export async function googleLogin(req, res){
         }
     }
     catch(error){
+        console.log("Error logging in with google:", error)
         res.status(500).json({message: "Error logging in with google", error: error})
+    }
+}
+
+export async function getAllUsers(req, res){
+    console.log("came to get all users")
+
+    // console.log("REQ.USER:", req.user);
+    console.log("IS ADMIN:", isAdmin(req));
+    //frontend eken ena request eka enne methanata e nisa api methanadith check karala balamu catch ekak dala error eka  mokakda kiyala
+
+    if(!isAdmin(req)){
+        res.status(403).json({
+            message: "Forbidden"
+        })
+        return
+    }
+    try{
+        //pageSizeI"N"String -> N akura capital thiyenne.👇
+        // const pageSizeINString = req.params.pageSize || "10";
+         const pageSizeInString = req.params.pageSize || "10";
+        const pageNumberInString = req.params.pageNumber || "1";
+        const pageSize = parseInt(pageSizeInString);
+        const pageNumber = parseInt(pageNumberInString);
+
+        const numberOfusers = await User.countDocuments();
+        const numberOfPages = Math.ceil(numberOfusers / pageSize);
+                    //  👇                  👇 MENNA ME WARAHAN DEKA ANAWASHYAI. Eka ain karama wade hari. 
+        // const usres = (await User.find({})).skip((pageNumber - 1) * pageSize).limit(pageSize);
+        const usres = await User.find({}).skip((pageNumber - 1) * pageSize).limit(pageSize);
+                //  |        1️⃣          |             2️⃣                |       3️⃣      |
+                // 1️⃣ - Usersla okkoma hoyaganna code eka
+                // 2️⃣ - Api page walata kadala users lawa ganiddi mulin thiyena kalin page walata aithi data skip karna code eka
+                // 3️⃣ - Api page walata kadala users lawa ganiddi illana page eken passe page wala thiyena data tika ain karana code eka
+         res.json({
+            //message: "Users fetched successfully",
+            users: usres,
+            totalPages: numberOfPages
+        })
+    }
+    catch(error){
+        //error eka print karanawa
+        console.log(error)
+        res.status(500).json({message: "Error getting all users", error: error})
+    }
+}
+
+export async function blockOrUnblockUser(req, res){
+    if(!isAdmin(req)){
+        res.status(403).json({
+            message: "Forbidden"
+        })
+        return
+    }
+    const email = req.body.email;
+
+    if(req.user.email === email){
+        res.status(400).json({
+            message: "You cannot block/unblock yourself"
+        })
+        return
+    }
+    try{
+        const user = await User.findOne({email: email});
+        if(user==null){
+            res.status(404).json({
+                message: "User not found"
+            })
+            return
+        }
+        await User.updateOne({email: email}, {isBlocked: !user.isBlocked})
+        res.json({
+            message: `User ${user.isBlocked ? "unblocked" : "blocked"} successfully`
+        })
+    }
+    catch(error){
+        res.status(500).json({message: "Error blocking/unblocking user", error: error})
+    }
+}
+
+export async function changeRole(req, res){
+    if(!isAdmin(req)){
+        res.status(403).json({
+            message: "Forbidden"
+        })
+        return
+    }
+    const email = req.body.email;
+    
+    if(req.user.email === email){
+        res.status(400).json({
+            message: "You cannot change your own role"
+        })
+        return
+    }
+    try{
+        const user = await User.findOne({email: email});
+        if(user==null){
+            res.status(404).json({
+                message: "User not found"
+            })
+            return
+        }
+        await User.updateOne({email: email}, {role: user.role === "admin" ? "customer" : "admin"})
+        res.json({
+            message: `User role changed to ${user.role === "admin" ? "customer" : "admin"} successfully`
+        })
+    }
+    catch(error){
+        res.status(500).json({message: "Error changing user role", error: error})
     }
 }
 

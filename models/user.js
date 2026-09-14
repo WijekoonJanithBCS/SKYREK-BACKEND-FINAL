@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        default: "https://picsum.photos/200/300",
+        default: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpGxm2ljXp9Y13yZtgyfoNKqp3ADSB47uG3OnRM-0eCw&s=10",
         required: true
     }
 
