@@ -5,6 +5,7 @@ import { isAdmin } from "./usercontroller.js";
 
 
 export async function CreateOrder(req, res) {
+    console.log("REQ.USER:", req.user);
 
     if(req.user == null){
         return res.status(401).json({
@@ -23,7 +24,7 @@ export async function CreateOrder(req, res) {
             city: req.body.city,
             country: req.body.country,
             postalCode: req.body.postalCode,
-            email: req.user.email,
+            //email: req.user.email,
             items: [],
             phoneNumber: req.body.phoneNumber,
             totalAmount: 0,
