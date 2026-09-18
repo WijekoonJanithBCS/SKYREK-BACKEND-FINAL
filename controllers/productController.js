@@ -72,7 +72,7 @@ export async function getProducts(req, res) {
         });
         }
         else{
-            const products = await Product.find({isVisible: true});
+            const products = await Product.find({isVisible: true, qty: {$gt: 0}});
             return res.status(200).json({
             message: "Products fetched successfully",
             products: products
