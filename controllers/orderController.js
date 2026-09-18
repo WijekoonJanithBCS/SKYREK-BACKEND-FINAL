@@ -24,7 +24,7 @@ export async function CreateOrder(req, res) {
             city: req.body.city,
             country: req.body.country,
             postalCode: req.body.postalCode,
-            //email: req.user.email,
+            email: req.user.email,
             items: [],
             phoneNumber: req.body.phoneNumber,
             totalAmount: 0,
@@ -177,7 +177,7 @@ export async function CreateOrder(req, res) {
         console.log("Error creating order: ", error);
 
         return res.status(500).json({
-            message: "Error creating order",
+            message: "---Error creating order---",
             error: error.message
         });
     }
